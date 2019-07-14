@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
@@ -21,12 +21,12 @@ public class App {
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 
-	private Map<String, SearchResults> getResultCounts(String... terms) {
-		Map<String, SearchResults> result = new HashMap<>();
+	private Collection<SearchResults> getResultCounts(String... terms) {
+		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
 			long googleResult = googleService.search(term);
 			long redditResult = redditService.search(term);
-			result.put(term, new SearchResults(term, googleResult, redditResult));
+			result.add(new SearchResults(term, googleResult, redditResult));
 		}
 		return result;
 	}
@@ -62,9 +62,9 @@ public class App {
 
 		StringBuilder sb = new StringBuilder();
 		String[] split = csv.split("\r\n");
-		Map<String, SearchResults> results = getResultCounts(split);
-		results.forEach((k, v) -> {
-			sb.append(k);
+		Collection<SearchResults> results = getResultCounts(split);
+		results.forEach(v -> {
+			sb.append(v.getTerm());
 			sb.append(", ");
 			sb.append(v.getGoogleSearchResultCount());
 			sb.append(", ");
