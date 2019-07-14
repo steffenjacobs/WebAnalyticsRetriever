@@ -1,0 +1,72 @@
+ago control
+AirPatrol WiFi
+AllJoyn
+Amazon Alexa
+Apple Homekit
+Apple Homepod
+Brilliant Control
+Calaos
+Conrad Connect
+Control4
+Control-Freak
+Demoticz
+DemotiGa
+dogmogik
+EVA ICS
+FHEM
+Fibre
+Freedomotic
+Gideon Smart Home
+Google Home
+Hive
+Home Assistant
+HomeBridge
+Homegear
+HomeGenie
+HomeSeer
+Homify
+HUEston
+IFTTT
+ImperiHome
+ioBroker
+IoTivity
+IP-Symcon
+iRidium Pro
+Jeedom
+Kaa
+LIFX-Control-Panel
+LinuxMCE
+Logitech
+Loxone Smart Home
+mediola IQONTROL
+Microsoft Home OS
+Mindsphere
+MisterHouse
+Mycontroller
+Mycroft
+MyPi
+Nest Mobile
+Netbeast
+Nim Home Assistant
+Node-RED
+openHAB
+OpenMotics
+OpenNetHome
+OpenRemote
+piDome
+Pimatic
+Project Brillo
+Pytomation
+QIVICON
+Samsung Smart Things
+Sensi
+SEQUEmatic
+SmartThings
+Stringify
+SURE Universal
+Switchur
+theThingsIo
+TP Link Kasa
+Wia
+Wink Hub 2
+Yeti
