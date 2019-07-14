@@ -31,8 +31,8 @@ public class App {
 		return result;
 	}
 
-	private ResourceBundle loadResources() {
-		try (FileInputStream fis = new FileInputStream("./settings.properties")) {
+	private ResourceBundle loadResource(String filename) {
+		try (FileInputStream fis = new FileInputStream(filename)) {
 			return new PropertyResourceBundle(fis);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -42,13 +42,18 @@ public class App {
 
 	public void start(String... args) throws IOException {
 
-		ResourceBundle rb = loadResources();
+		final String resourceFile = "./settings.properties";
+		if (!new File(resourceFile).exists()) {
+			LOG.error("Configuration with google-api-key is missing. Please create {}.", resourceFile);
+			return;
+		}
+		ResourceBundle rb = loadResource(resourceFile);
 		String apiKey = rb.getString("google-api-key");
 
 		googleService = new GoogleSearchService(apiKey);
 
 		if (args.length != 1) {
-			System.err.println("Invalid input. Please specify input file. Using default file ./terms.txt");
+			LOG.error("Invalid input. Please specify input file. Using default file ./terms.txt...");
 			args = new String[] { "terms.txt" };
 		}
 		File f = new File(args[0]);
