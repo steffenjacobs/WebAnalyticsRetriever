@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
@@ -17,6 +19,8 @@ import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 
 public class App {
 	private static final Logger LOG = LoggerFactory.getLogger(App.class);
+
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDD");
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
@@ -72,8 +76,9 @@ public class App {
 			sb.append("\n");
 		});
 
-		FileUtils.write(new File("output.csv"), sb.toString(), StandardCharsets.UTF_8);
-		LOG.info("Stored result to ./output.csv.");
+		final String filename = "output" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
+		LOG.info("Stored result to ./{}", filename);
 	}
 
 	public static void main(String[] args) throws IOException {
