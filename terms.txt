@@ -19,6 +19,7 @@ Freedomotic
 Gideon Smart Home
 Google Home
 Hive
+Hive Smart Home
 Home Assistant
 HomeBridge
 Homegear
@@ -34,9 +35,11 @@ IP-Symcon
 iRidium Pro
 Jeedom
 Kaa
+Kaa Smart Home
 LIFX-Control-Panel
 LinuxMCE
-Logitech
+Logitech SmartHome
+Logitech Harmony
 Loxone Smart Home
 mediola IQONTROL
 Microsoft Home OS
@@ -65,8 +68,10 @@ SmartThings
 Stringify
 SURE Universal
 Switchur
+Telekom Magenta SmartHome
 theThingsIo
 TP Link Kasa
 Wia
 Wink Hub 2
+Yeti Smart Home
 Yeti
