@@ -20,7 +20,7 @@ import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 public class App {
 	private static final Logger LOG = LoggerFactory.getLogger(App.class);
 
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDD");
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD-hh-mm");
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
@@ -48,7 +48,7 @@ public class App {
 
 		final String resourceFile = "./settings.properties";
 		if (!new File(resourceFile).exists()) {
-			LOG.error("Configuration with google-api-key is missing. Please create {}.", resourceFile);
+			LOG.warn("Configuration with google-api-key is missing. Please create {}.", resourceFile);
 			return;
 		}
 		ResourceBundle rb = loadResource(resourceFile);
