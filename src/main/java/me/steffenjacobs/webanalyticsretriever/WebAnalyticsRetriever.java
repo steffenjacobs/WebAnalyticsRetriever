@@ -94,6 +94,8 @@ public class WebAnalyticsRetriever {
 			sb.append(v.getRedditSearchResultCount());
 			sb.append(", ");
 			sb.append(v.getGoogleBrowserSearchResultCount());
+			sb.append(", ");
+			sb.append(v.getGoogleBrowserExactSearchResultCount());
 			sb.append("\n");
 		});
 
