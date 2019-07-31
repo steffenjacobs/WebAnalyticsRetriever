@@ -7,13 +7,15 @@ public class SearchResults {
 	private final long redditSearchResultCount;
 	private final long googleSearchResultCount;
 	private final long googleBrowserSearchResultCount;
+	private long googleBrowserExactSearchResultCount;
 
-	public SearchResults(String term, long redditSearchResultCount, long googleSearchResultCount, long googleBrowserSearchResultCount) {
+	public SearchResults(String term, long redditSearchResultCount, long googleSearchResultCount, long googleBrowserSearchResultCount, long googleBrowserExactSearchResultCount) {
 		super();
 		this.term = term;
 		this.redditSearchResultCount = redditSearchResultCount;
 		this.googleSearchResultCount = googleSearchResultCount;
 		this.googleBrowserSearchResultCount = googleBrowserSearchResultCount;
+		this.googleBrowserExactSearchResultCount = googleBrowserExactSearchResultCount;
 	}
 
 	public String getTerm() {
@@ -30,6 +32,10 @@ public class SearchResults {
 
 	public long getGoogleBrowserSearchResultCount() {
 		return googleBrowserSearchResultCount;
+	}
+
+	public long getGoogleBrowserExactSearchResultCount() {
+		return googleBrowserExactSearchResultCount;
 	}
 
 }

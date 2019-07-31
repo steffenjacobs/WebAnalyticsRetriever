@@ -48,18 +48,24 @@ public class AnalyticsAggregator {
 					long valGoogle = -1;
 					long valReddit = -1;
 					long valGoogleBrowser = -1;
+					long valGoogleBrowserExact = -1;
 					if (split.length == 2) {
 						valGoogle = Long.parseLong(split[1].trim());
 					} else if (split.length == 3) {
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
+					} else if (split.length == 4) {
+						valReddit = Long.parseLong(split[1].trim());
+						valGoogle = Long.parseLong(split[2].trim());
+						valGoogleBrowser = Long.parseLong(split[3].trim());
 					} else {
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
 						valGoogleBrowser = Long.parseLong(split[3].trim());
+						valGoogleBrowserExact = Long.parseLong(split[4].trim());
 					}
 					results.putIfAbsent(split[0], new ArrayList<SearchResults>());
-					results.get(split[0]).add(new SearchResults(split[0], valReddit, valGoogle, valGoogleBrowser));
+					results.get(split[0]).add(new SearchResults(split[0], valReddit, valGoogle, valGoogleBrowser, valGoogleBrowserExact));
 
 				}
 			}
@@ -87,7 +93,14 @@ public class AnalyticsAggregator {
 			sGoogleWebSearch = filteredStream(e.getValue(), SearchResults::getGoogleBrowserSearchResultCount);
 			final long countGoogleWebSearch = sGoogleWebSearch.count();
 
-			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, avgGoogleWebSearch, countGoogle, countReddit, countGoogleWebSearch));
+			LongStream sGoogleWebSearchExact = filteredStream(e.getValue(), SearchResults::getGoogleBrowserExactSearchResultCount);
+			final double avgGoogleWebSearchExact = sGoogleWebSearchExact.average().orElse(-1);
+
+			sGoogleWebSearchExact = filteredStream(e.getValue(), SearchResults::getGoogleBrowserExactSearchResultCount);
+			final long countGoogleWebSearchExact = sGoogleWebSearchExact.count();
+
+			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, avgGoogleWebSearch, avgGoogleWebSearchExact, countGoogle, countReddit, countGoogleWebSearch,
+					countGoogleWebSearchExact));
 		}
 
 		LOG.info("Aggregated {} values to {} vlaues.", countEntries, transformedResults.size());
@@ -102,7 +115,8 @@ public class AnalyticsAggregator {
 	}
 
 	private static void exportToFile(Set<Result> transformedResults, final boolean rounded) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser,countGoogle,countReddit,countGoogleSearchBrowser\n");
+		final StringBuilder sb = new StringBuilder(
+				"name,averageGoogle,averageReddit,averageGoogleSearchBrowser,averageGoogleSearchBrowserExact,countGoogle,countReddit,countGoogleSearchBrowser,countGoogleSearchBrowserExact\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
@@ -112,11 +126,15 @@ public class AnalyticsAggregator {
 			sb.append(",");
 			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogleWebSearch()) : r.getAverageGoogleWebSearch()).toPlainString());
 			sb.append(",");
+			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogleWebSearchExact()) : r.getAverageGoogleWebSearchExact()).toPlainString());
+			sb.append(",");
 			sb.append(r.getCountGoogle());
 			sb.append(",");
 			sb.append(r.getCountReddit());
 			sb.append(",");
 			sb.append(r.getCountGoogleWebSearch());
+			sb.append("\n");
+			sb.append(r.getCountGoogleWebSearchExact());
 			sb.append("\n");
 		}
 
@@ -126,7 +144,7 @@ public class AnalyticsAggregator {
 	}
 
 	private static void exportToFileWithoutCountRounded(Set<Result> transformedResults) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser\n");
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser,averageGoogleSearchBrowserExact\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
@@ -135,6 +153,8 @@ public class AnalyticsAggregator {
 			sb.append(new BigDecimal(Math.round(r.getAverageReddit())).toPlainString());
 			sb.append(",");
 			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearch())).toPlainString());
+			sb.append("\n");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearchExact())).toPlainString());
 			sb.append("\n");
 		}
 
@@ -151,16 +171,21 @@ public class AnalyticsAggregator {
 		private final double averageReddit;
 		private final long countGoogleWebSearch;
 		private final double averageGoogleWebSearch;
+		private final long countGoogleWebSearchExact;
+		private final double averageGoogleWebSearchExact;
 
-		public Result(String name, double averageGoogle, double averageReddit, double averageGoogleWebSearch, long countGoogle, long countReddit, long countGoogleWebSearch) {
+		public Result(String name, double averageGoogle, double averageReddit, double averageGoogleWebSearch, double averageGoogleWebSearchExact, long countGoogle,
+				long countReddit, long countGoogleWebSearch, long countGoogleWebSearchExact) {
 			super();
 			this.name = name;
 			this.averageGoogle = averageGoogle;
 			this.averageReddit = averageReddit;
 			this.averageGoogleWebSearch = averageGoogleWebSearch;
+			this.averageGoogleWebSearchExact = averageGoogleWebSearchExact;
 			this.countGoogle = countGoogle;
 			this.countReddit = countReddit;
 			this.countGoogleWebSearch = countGoogleWebSearch;
+			this.countGoogleWebSearchExact = countGoogleWebSearchExact;
 		}
 
 		public String getName() {
@@ -189,6 +214,14 @@ public class AnalyticsAggregator {
 
 		public long getCountGoogleWebSearch() {
 			return countGoogleWebSearch;
+		}
+
+		public double getAverageGoogleWebSearchExact() {
+			return averageGoogleWebSearchExact;
+		}
+
+		public long getCountGoogleWebSearchExact() {
+			return countGoogleWebSearchExact;
 		}
 	}
 }
