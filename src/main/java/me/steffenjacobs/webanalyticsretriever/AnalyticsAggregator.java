@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
+
 /** @author Steffen Jacobs */
 public class AnalyticsAggregator {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalyticsAggregator.class);
@@ -31,7 +33,7 @@ public class AnalyticsAggregator {
 
 	public static void main(String[] args) throws IOException {
 
-		final Map<String, Collection<Pair<Long>>> results = new HashMap<>();
+		final Map<String, Collection<SearchResults>> results = new HashMap<>();
 
 		int countEntries = 0;
 		int countFiles = 0;
@@ -45,14 +47,19 @@ public class AnalyticsAggregator {
 
 					long valGoogle = -1;
 					long valReddit = -1;
+					long valGoogleBrowser = -1;
 					if (split.length == 2) {
 						valGoogle = Long.parseLong(split[1].trim());
+					} else if (split.length == 3) {
+						valReddit = Long.parseLong(split[1].trim());
+						valGoogle = Long.parseLong(split[2].trim());
 					} else {
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
+						valGoogleBrowser = Long.parseLong(split[3].trim());
 					}
-					results.putIfAbsent(split[0], new ArrayList<Pair<Long>>());
-					results.get(split[0]).add(new Pair<>(valGoogle, valReddit));
+					results.putIfAbsent(split[0], new ArrayList<SearchResults>());
+					results.get(split[0]).add(new SearchResults(split[0], valReddit, valGoogle, valGoogleBrowser));
 
 				}
 			}
@@ -61,20 +68,26 @@ public class AnalyticsAggregator {
 
 		final Set<Result> transformedResults = new HashSet<>();
 
-		for (Map.Entry<String, Collection<Pair<Long>>> e : results.entrySet()) {
-			LongStream sGoogle = filteredStream(e.getValue(), Pair::getA);
+		for (Map.Entry<String, Collection<SearchResults>> e : results.entrySet()) {
+			LongStream sGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount);
 			final long countGoogle = sGoogle.count();
 
-			sGoogle = filteredStream(e.getValue(), Pair::getA);
+			sGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount);
 			final double avgGoogle = sGoogle.average().orElse(-1);
 
-			LongStream sReddit = filteredStream(e.getValue(), Pair::getB);
+			LongStream sReddit = filteredStream(e.getValue(), SearchResults::getRedditSearchResultCount);
 			final long countReddit = sReddit.count();
 
-			sReddit = filteredStream(e.getValue(), Pair::getB);
+			sReddit = filteredStream(e.getValue(), SearchResults::getRedditSearchResultCount);
 			final double avgReddit = sReddit.average().orElse(-1);
 
-			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, (int) countGoogle, (int) countReddit));
+			LongStream sGoogleWebSearch = filteredStream(e.getValue(), SearchResults::getGoogleBrowserSearchResultCount);
+			final double avgGoogleWebSearch = sGoogleWebSearch.average().orElse(-1);
+
+			sGoogleWebSearch = filteredStream(e.getValue(), SearchResults::getGoogleBrowserSearchResultCount);
+			final long countGoogleWebSearch = sGoogleWebSearch.count();
+
+			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, avgGoogleWebSearch, countGoogle, countReddit, countGoogleWebSearch));
 		}
 
 		LOG.info("Aggregated {} values to {} vlaues.", countEntries, transformedResults.size());
@@ -84,12 +97,12 @@ public class AnalyticsAggregator {
 		exportToFileWithoutCountRounded(transformedResults);
 	}
 
-	private static LongStream filteredStream(Collection<Pair<Long>> l, Function<Pair<Long>, Long> mapper) {
+	private static LongStream filteredStream(Collection<SearchResults> l, Function<SearchResults, Long> mapper) {
 		return l.stream().mapToLong(v -> mapper.apply(v).longValue()).filter(v -> v != -1);
 	}
 
 	private static void exportToFile(Set<Result> transformedResults, final boolean rounded) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,countGoogle,countReddit\n");
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser,countGoogle,countReddit, countGoogleSearchBrowser\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
@@ -127,17 +140,21 @@ public class AnalyticsAggregator {
 	static class Result {
 		private final String name;
 		private final double averageGoogle;
-		private final int countGoogle;
-		private final int countReddit;
+		private final long countGoogle;
+		private final long countReddit;
 		private final double averageReddit;
+		private final long countGoogleWebSearch;
+		private final double averageGoogleWebSearch;
 
-		public Result(String name, double averageGoogle, double averageReddit, int countGoogle, int countReddit) {
+		public Result(String name, double averageGoogle, double averageReddit, double averageGoogleWebSearch, long countGoogle, long countReddit, long countGoogleWebSearch) {
 			super();
 			this.name = name;
 			this.averageGoogle = averageGoogle;
 			this.averageReddit = averageReddit;
+			this.averageGoogleWebSearch = averageGoogleWebSearch;
 			this.countGoogle = countGoogle;
 			this.countReddit = countReddit;
+			this.countGoogleWebSearch = countGoogleWebSearch;
 		}
 
 		public String getName() {
@@ -152,32 +169,20 @@ public class AnalyticsAggregator {
 			return averageReddit;
 		}
 
-		public int getCountGoogle() {
+		public long getCountGoogle() {
 			return countGoogle;
 		}
 
-		public int getCountReddit() {
+		public long getCountReddit() {
 			return countReddit;
 		}
+
+		public double getAverageGoogleWebSearch() {
+			return averageGoogleWebSearch;
+		}
+
+		public long getCountGoogleWebSearch() {
+			return countGoogleWebSearch;
+		}
 	}
-
-	static class Pair<T> {
-		private final T a, b;
-
-		public Pair(T a, T b) {
-			super();
-			this.a = a;
-			this.b = b;
-		}
-
-		public T getA() {
-			return a;
-		}
-
-		public T getB() {
-			return b;
-		}
-
-	}
-
 }
