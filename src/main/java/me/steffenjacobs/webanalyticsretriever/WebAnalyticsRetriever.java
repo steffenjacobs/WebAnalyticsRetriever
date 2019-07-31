@@ -24,13 +24,15 @@ public class WebAnalyticsRetriever {
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
+	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
 	private Collection<SearchResults> getResultCounts(String... terms) {
 		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
 			long googleResult = googleService.search(term);
 			long redditResult = redditService.search(term);
-			result.add(new SearchResults(term, googleResult, redditResult));
+			long googleBrowserSearch = googleBrowserService.search(term);
+			result.add(new SearchResults(term, googleResult, redditResult, googleBrowserSearch));
 		}
 		return result;
 	}
@@ -73,6 +75,8 @@ public class WebAnalyticsRetriever {
 			sb.append(v.getGoogleSearchResultCount());
 			sb.append(", ");
 			sb.append(v.getRedditSearchResultCount());
+			sb.append(", ");
+			sb.append(v.getGoogleBrowserSearchResultCount());
 			sb.append("\n");
 		});
 

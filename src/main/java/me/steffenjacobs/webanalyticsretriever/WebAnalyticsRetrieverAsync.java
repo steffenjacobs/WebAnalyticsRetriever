@@ -22,12 +22,14 @@ public class WebAnalyticsRetrieverAsync {
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
+	private final GoogleSearchSeleniumService googleBrowserSearchService = new GoogleSearchSeleniumService();
 
 	private List<SearchResults> getResultCounts(String... terms) {
 		final List<CompletableFuture<SearchResults>> futures = Arrays.stream(terms).map(term -> doAsync(() -> {
 			long googleResult = googleService.search(term);
 			long redditResult = redditService.search(term);
-			return new SearchResults(term, redditResult, googleResult);
+			long googleBrowserSearchResult = googleBrowserSearchService.search(term);
+			return new SearchResults(term, redditResult, googleResult, googleBrowserSearchResult);
 		})).collect(Collectors.toList());
 
 		return futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
@@ -71,6 +73,8 @@ public class WebAnalyticsRetrieverAsync {
 			sb.append(v.getGoogleSearchResultCount());
 			sb.append(", ");
 			sb.append(v.getRedditSearchResultCount());
+			sb.append(", ");
+			sb.append(v.getGoogleBrowserSearchResultCount());
 			sb.append("\n");
 		});
 
