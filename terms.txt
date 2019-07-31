@@ -9,7 +9,7 @@ Calaos
 Conrad Connect
 Control4
 Control-Freak
-Demoticz
+Domoticz
 DemotiGa
 dogmogik
 EVA ICS
