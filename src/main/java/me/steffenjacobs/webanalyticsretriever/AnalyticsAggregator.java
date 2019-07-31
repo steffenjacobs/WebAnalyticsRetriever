@@ -78,6 +78,7 @@ public class AnalyticsAggregator {
 
 		exportToFile(transformedResults, false);
 		exportToFile(transformedResults, true);
+		exportToFileWithoutCountRounded(transformedResults);
 	}
 
 	private static LongStream filteredStream(Collection<Pair<Long>> l, Function<Pair<Long>, Long> mapper) {
@@ -102,6 +103,22 @@ public class AnalyticsAggregator {
 		final String filename = "output-" + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported {} aggregated values to file '{}'.", rounded ? "rounded" : "exact", filename);
+	}
+
+	private static void exportToFileWithoutCountRounded(Set<Result> transformedResults) throws IOException {
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit\n");
+		for (Result r : transformedResults) {
+			sb.append(r.getName());
+			sb.append(",");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogle())).toPlainString());
+			sb.append(",");
+			sb.append(new BigDecimal(Math.round(r.getAverageReddit())).toPlainString());
+			sb.append("\n");
+		}
+
+		final String filename = "output-woresultsrounded-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
+		LOG.info("Exported rounded and aggregated values withour result to file '{}'.", filename);
 	}
 
 	static class Result {
