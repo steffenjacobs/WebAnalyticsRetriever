@@ -108,6 +108,7 @@ public class AnalyticsAggregator {
 		exportToFile(transformedResults, false);
 		exportToFile(transformedResults, true);
 		exportToFileWithoutCountRounded(transformedResults);
+		exportToTableFile(transformedResults);
 	}
 
 	private static LongStream filteredStream(Collection<SearchResults> l, Function<SearchResults, Long> mapper) {
@@ -159,6 +160,31 @@ public class AnalyticsAggregator {
 		}
 
 		final String filename = "output-woresultsrounded-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
+		LOG.info("Exported table to file '{}'.", filename);
+	}
+	
+	private static void exportToTableFile(Set<Result> transformedResults) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		//sb.append("\\begin{tabular}{l|c|c|c|c}\r\n" );
+		//sb.append("\\textbf{Name of the} & \\textbf{\\# Search Results} & \\textbf{\\# Comments on} & \\textbf{\\# Search Results on} & \\textbf{\\# Search Results on exact}\\\\\r\n" + 
+		//		"			\\textbf{IoT Platform} & \\textbf{on Google API} & \\textbf{Reddit} & \\textbf{Google Web Search} & \\textbf{Google Web Search}\\\\\r\n"); 
+		//sb.append("      \\hline\r\n");
+		for (Result r : transformedResults) {
+			sb.append(r.getName());
+			sb.append(" & ");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogle())).toPlainString());
+			sb.append(" & ");
+			sb.append(new BigDecimal(Math.round(r.getAverageReddit())).toPlainString());
+			sb.append(" & ");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearch())).toPlainString());
+			sb.append(" & ");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearchExact())).toPlainString());
+			sb.append(" \\\\\n");
+		}
+		//sb.append("    \\end{tabular}");
+
+		final String filename = "output-results-table-" + sdf.format(Calendar.getInstance().getTime()) + ".txt";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported rounded and aggregated values withour result to file '{}'.", filename);
 	}
