@@ -50,7 +50,7 @@ public class WebAnalyticsRetriever {
 
 		final String resourceFile = "./settings.properties";
 		if (!new File(resourceFile).exists()) {
-			LOG.warn("Configuration with google-api-key is missing. Please create {}.", resourceFile);
+			LOG.error("Configuration with google-api-key is missing. Please create {}.", resourceFile);
 			return;
 		}
 		ResourceBundle rb = loadResource(resourceFile);
@@ -59,7 +59,7 @@ public class WebAnalyticsRetriever {
 		googleService = new GoogleSearchService(apiKey);
 
 		if (args.length != 1) {
-			LOG.error("Invalid input. Please specify input file. Using default file ./terms.txt...");
+			LOG.warn("Invalid input. Please specify input file. Using default file ./terms.txt...");
 			args = new String[] { "terms.txt" };
 		}
 		File f = new File(args[0]);

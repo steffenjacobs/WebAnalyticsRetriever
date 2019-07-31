@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class GoogleSearchSeleniumService {
 		try {
 			String encodedTerm = URLEncoder.encode(term, "UTF-8");
 			System.setProperty("webdriver.chrome.driver", "C:\\projects\\IoTPlatformIntegrator\\chromedriver.exe");
-			ChromeOptions options = new ChromeOptions();
+			final ChromeOptions options = new ChromeOptions();
 			options.addArguments("--headless");
 			ChromeDriver driver = new ChromeDriver(options);
 
@@ -44,7 +45,7 @@ public class GoogleSearchSeleniumService {
 			}
 			driver.close();
 
-		} catch (UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException  | WebDriverException e) {
 			LOG.error(e.getMessage(), e);
 		}
 		finally {
