@@ -20,7 +20,7 @@ import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 public class WebAnalyticsRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(WebAnalyticsRetriever.class);
 
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD-hh-mm");
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd-HH-mm");
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
@@ -76,7 +76,7 @@ public class WebAnalyticsRetriever {
 			sb.append("\n");
 		});
 
-		final String filename = "output" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final String filename = "output-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Stored result to ./{}", filename);
 	}
