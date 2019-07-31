@@ -43,10 +43,13 @@ public class AnalyticsAggregator {
 					countEntries++;
 					String[] split = line.split(",");
 
-					long valGoogle = Long.parseLong(split[1].trim());
+					long valGoogle = -1;
 					long valReddit = -1;
-					if (split.length > 2) {
-						valReddit = Long.parseLong(split[2].trim());
+					if (split.length == 2) {
+						valGoogle = Long.parseLong(split[1].trim());
+					} else {
+						valReddit = Long.parseLong(split[1].trim());
+						valGoogle = Long.parseLong(split[2].trim());
 					}
 					results.putIfAbsent(split[0], new ArrayList<Pair<Long>>());
 					results.get(split[0]).add(new Pair<>(valGoogle, valReddit));
