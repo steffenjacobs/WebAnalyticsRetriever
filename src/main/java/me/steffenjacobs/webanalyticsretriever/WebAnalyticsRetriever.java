@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -29,10 +30,26 @@ public class WebAnalyticsRetriever {
 	private Collection<SearchResults> getResultCounts(String... terms) {
 		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
-			long googleResult = googleService.search(term);
-			long redditResult = redditService.search(term);
-			long googleBrowserSearch = googleBrowserService.search(term);
-			result.add(new SearchResults(term, googleResult, redditResult, googleBrowserSearch));
+			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleService.search(term));
+			CompletableFuture<Long> redditResultFuture = CompletableFuture.supplyAsync(() -> redditService.search(term));
+			CompletableFuture<Long> googleBrowserSearchResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserService.search(term));
+			CompletableFuture<Long> googleBrowserSearchExactResultFuture = null;
+
+			final boolean containsWhitespaces = term.contains(" ");
+			if (containsWhitespaces) {
+				googleBrowserSearchExactResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserService.search(term.replace(" ", " AND ")));
+			}
+
+			long googleResult = googleResultFuture.join();
+			long redditResult = redditResultFuture.join();
+			long googleBrowserSearchResult = googleBrowserSearchResultFuture.join();
+			long googleBrowserExactSearchResult = googleBrowserSearchResult;
+
+			if (containsWhitespaces) {
+				googleBrowserExactSearchResult = googleBrowserSearchExactResultFuture.join();
+			}
+
+			result.add(new SearchResults(term, googleResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
 		}
 		return result;
 	}

@@ -26,10 +26,17 @@ public class WebAnalyticsRetrieverAsync {
 
 	private List<SearchResults> getResultCounts(String... terms) {
 		final List<CompletableFuture<SearchResults>> futures = Arrays.stream(terms).map(term -> doAsync(() -> {
-			long googleResult = googleService.search(term);
-			long redditResult = redditService.search(term);
-			long googleBrowserSearchResult = googleBrowserSearchService.search(term);
-			return new SearchResults(term, redditResult, googleResult, googleBrowserSearchResult);
+			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleService.search(term));
+			CompletableFuture<Long> redditResultFuture = CompletableFuture.supplyAsync(() -> redditService.search(term));
+			CompletableFuture<Long> googleBrowserSearchResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserSearchService.search(term));
+			CompletableFuture<Long> googleBrowserSearchExactResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserSearchService.search(term.replace(" ", " AND ")));
+
+			long googleResult = googleResultFuture.join();
+			long redditResult = redditResultFuture.join();
+			long googleBrowserSearchResult = googleBrowserSearchResultFuture.join();
+			long googleBrowserExactSearchResult = googleBrowserSearchExactResultFuture.join();
+
+			return new SearchResults(term, redditResult, googleResult, googleBrowserSearchResult, googleBrowserExactSearchResult);
 		})).collect(Collectors.toList());
 
 		return futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
