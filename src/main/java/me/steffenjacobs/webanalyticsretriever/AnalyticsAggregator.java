@@ -89,7 +89,7 @@ public class AnalyticsAggregator {
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
-			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogle()) : r.getAverageReddit()).toPlainString());
+			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogle()) : r.getAverageGoogle()).toPlainString());
 			sb.append(",");
 			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageReddit()) : r.getAverageReddit()).toPlainString());
 			sb.append(",");
