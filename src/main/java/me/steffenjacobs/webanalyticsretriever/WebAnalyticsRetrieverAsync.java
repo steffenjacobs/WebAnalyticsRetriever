@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 
-public class AppAsync {
-	private static final Logger LOG = LoggerFactory.getLogger(AppAsync.class);
+public class WebAnalyticsRetrieverAsync {
+	private static final Logger LOG = LoggerFactory.getLogger(WebAnalyticsRetrieverAsync.class);
 
 	private GoogleSearchService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
@@ -79,7 +79,7 @@ public class AppAsync {
 	}
 
 	public static void main(String[] args) throws IOException {
-		new AppAsync().start();
+		new WebAnalyticsRetrieverAsync().start();
 	}
 
 	private <T> CompletableFuture<T> doAsync(CallableWithoutException<T> toCall) {
