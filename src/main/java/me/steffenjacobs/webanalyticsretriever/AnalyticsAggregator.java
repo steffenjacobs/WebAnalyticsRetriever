@@ -133,7 +133,7 @@ public class AnalyticsAggregator {
 			sb.append(r.getCountReddit());
 			sb.append(",");
 			sb.append(r.getCountGoogleWebSearch());
-			sb.append("\n");
+			sb.append(",");
 			sb.append(r.getCountGoogleWebSearchExact());
 			sb.append("\n");
 		}
@@ -153,7 +153,7 @@ public class AnalyticsAggregator {
 			sb.append(new BigDecimal(Math.round(r.getAverageReddit())).toPlainString());
 			sb.append(",");
 			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearch())).toPlainString());
-			sb.append("\n");
+			sb.append(",");
 			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearchExact())).toPlainString());
 			sb.append("\n");
 		}
