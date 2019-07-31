@@ -13,8 +13,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.LongStream;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ public class AnalyticsAggregator {
 
 	public static void main(String[] args) throws IOException {
 
-		final Map<String, Collection<Long>> results = new HashMap<>();
+		final Map<String, Collection<Pair<Long>>> results = new HashMap<>();
 
 		int countEntries = 0;
 		int countFiles = 0;
@@ -41,23 +43,35 @@ public class AnalyticsAggregator {
 					countEntries++;
 					String[] split = line.split(",");
 
-					long val = Long.parseLong(split[1].trim());
-					if (val == -1) {
-						continue;
+					long valGoogle = Long.parseLong(split[1].trim());
+					long valReddit = -1;
+					if (split.length > 2) {
+						valReddit = Long.parseLong(split[2].trim());
 					}
-					results.putIfAbsent(split[0], new ArrayList<Long>());
-					results.get(split[0]).add(val);
+					results.putIfAbsent(split[0], new ArrayList<Pair<Long>>());
+					results.get(split[0]).add(new Pair<>(valGoogle, valReddit));
 
 				}
 			}
 		}
 		LOG.info("Imported {} entries from {} files.", countEntries, countFiles);
 
-		Set<Result> transformedResults = new HashSet<>();
+		final Set<Result> transformedResults = new HashSet<>();
 
-		for (Map.Entry<String, Collection<Long>> e : results.entrySet()) {
-			double avg = e.getValue().stream().mapToLong(Long::longValue).average().orElse(-1);
-			transformedResults.add(new Result(e.getKey().trim(), avg, e.getValue().size()));
+		for (Map.Entry<String, Collection<Pair<Long>>> e : results.entrySet()) {
+			LongStream sGoogle = filteredStream(e.getValue(), Pair::getA);
+			final long countGoogle = sGoogle.count();
+
+			sGoogle = filteredStream(e.getValue(), Pair::getA);
+			final double avgGoogle = sGoogle.average().orElse(-1);
+
+			LongStream sReddit = filteredStream(e.getValue(), Pair::getB);
+			final long countReddit = sReddit.count();
+
+			sReddit = filteredStream(e.getValue(), Pair::getB);
+			final double avgReddit = sReddit.average().orElse(-1);
+
+			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, (int) countGoogle, (int) countReddit));
 		}
 
 		LOG.info("Aggregated {} values to {} vlaues.", countEntries, transformedResults.size());
@@ -66,14 +80,22 @@ public class AnalyticsAggregator {
 		exportToFile(transformedResults, true);
 	}
 
+	private static LongStream filteredStream(Collection<Pair<Long>> l, Function<Pair<Long>, Long> mapper) {
+		return l.stream().mapToLong(v -> mapper.apply(v).longValue()).filter(v -> v != -1);
+	}
+
 	private static void exportToFile(Set<Result> transformedResults, final boolean rounded) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,average,count\n");
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,countGoogle,countReddit\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
-			sb.append(new BigDecimal(rounded ? Math.round(r.getAverage()) : r.getAverage()).toPlainString());
+			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogle()) : r.getAverageReddit()).toPlainString());
 			sb.append(",");
-			sb.append(r.getCount());
+			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageReddit()) : r.getAverageReddit()).toPlainString());
+			sb.append(",");
+			sb.append(r.getCountGoogle());
+			sb.append(",");
+			sb.append(r.getCountReddit());
 			sb.append("\n");
 		}
 
@@ -84,26 +106,56 @@ public class AnalyticsAggregator {
 
 	static class Result {
 		private final String name;
-		private final double average;
-		private final int count;
+		private final double averageGoogle;
+		private final int countGoogle;
+		private final int countReddit;
+		private final double averageReddit;
 
-		public Result(String name, double average, int count) {
+		public Result(String name, double averageGoogle, double averageReddit, int countGoogle, int countReddit) {
 			super();
 			this.name = name;
-			this.average = average;
-			this.count = count;
+			this.averageGoogle = averageGoogle;
+			this.averageReddit = averageReddit;
+			this.countGoogle = countGoogle;
+			this.countReddit = countReddit;
 		}
 
 		public String getName() {
 			return name;
 		}
 
-		public double getAverage() {
-			return average;
+		public double getAverageGoogle() {
+			return averageGoogle;
 		}
 
-		public int getCount() {
-			return count;
+		public double getAverageReddit() {
+			return averageReddit;
+		}
+
+		public int getCountGoogle() {
+			return countGoogle;
+		}
+
+		public int getCountReddit() {
+			return countReddit;
+		}
+	}
+
+	static class Pair<T> {
+		private final T a, b;
+
+		public Pair(T a, T b) {
+			super();
+			this.a = a;
+			this.b = b;
+		}
+
+		public T getA() {
+			return a;
+		}
+
+		public T getB() {
+			return b;
 		}
 
 	}
