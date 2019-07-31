@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 
-public class App {
-	private static final Logger LOG = LoggerFactory.getLogger(App.class);
+public class WebAnalyticsRetriever {
+	private static final Logger LOG = LoggerFactory.getLogger(WebAnalyticsRetriever.class);
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD-hh-mm");
 
@@ -82,6 +82,6 @@ public class App {
 	}
 
 	public static void main(String[] args) throws IOException {
-		new App().start();
+		new WebAnalyticsRetriever().start();
 	}
 }
