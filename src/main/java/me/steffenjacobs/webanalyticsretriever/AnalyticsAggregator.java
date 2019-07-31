@@ -102,7 +102,7 @@ public class AnalyticsAggregator {
 	}
 
 	private static void exportToFile(Set<Result> transformedResults, final boolean rounded) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser,countGoogle,countReddit, countGoogleSearchBrowser\n");
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser,countGoogle,countReddit,countGoogleSearchBrowser\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
@@ -110,9 +110,13 @@ public class AnalyticsAggregator {
 			sb.append(",");
 			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageReddit()) : r.getAverageReddit()).toPlainString());
 			sb.append(",");
+			sb.append(new BigDecimal(rounded ? Math.round(r.getAverageGoogleWebSearch()) : r.getAverageGoogleWebSearch()).toPlainString());
+			sb.append(",");
 			sb.append(r.getCountGoogle());
 			sb.append(",");
 			sb.append(r.getCountReddit());
+			sb.append(",");
+			sb.append(r.getCountGoogleWebSearch());
 			sb.append("\n");
 		}
 
@@ -122,13 +126,15 @@ public class AnalyticsAggregator {
 	}
 
 	private static void exportToFileWithoutCountRounded(Set<Result> transformedResults) throws IOException {
-		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit\n");
+		final StringBuilder sb = new StringBuilder("name,averageGoogle,averageReddit,averageGoogleSearchBrowser\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(",");
 			sb.append(new BigDecimal(Math.round(r.getAverageGoogle())).toPlainString());
 			sb.append(",");
 			sb.append(new BigDecimal(Math.round(r.getAverageReddit())).toPlainString());
+			sb.append(",");
+			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearch())).toPlainString());
 			sb.append("\n");
 		}
 
