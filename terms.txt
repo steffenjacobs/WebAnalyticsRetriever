@@ -15,12 +15,20 @@ dogmogik
 EVA ICS
 FHEM
 Fibre
+Fibre Smart Home
+Fibre Home Automation
+Fibre IoT
 Freedomotic
 Gideon Smart Home
 Google Home
 Hive
+Hive Home Automation
+Hive IoT
 Hive Smart Home
 Home Assistant
+Home Assistant IoT
+Home Assistant Smart Home
+Home Assistant Home Automation
 HomeBridge
 Homegear
 HomeGenie
@@ -35,9 +43,14 @@ IP-Symcon
 iRidium Pro
 Jeedom
 Kaa
+Kaa Home Automation
+Kaa IoT
 Kaa Smart Home
 LIFX-Control-Panel
 LinuxMCE
+Logitech
+Logitech Home Automation
+Logitech IoT
 Logitech SmartHome
 Logitech Harmony
 Loxone Smart Home
@@ -62,10 +75,16 @@ Project Brillo
 Pytomation
 QIVICON
 Samsung Smart Things
+Sensi IoT
+Sensi Home Automation
+Sensi Smart Home
 Sensi
 SEQUEmatic
 SmartThings
 Stringify
+Stringify IoT
+Stringify Smart Home
+Stringify Home Automation
 SURE Universal
 Switchur
 Telekom Magenta SmartHome
@@ -74,4 +93,6 @@ TP Link Kasa
 Wia
 Wink Hub 2
 Yeti Smart Home
+Yeti Home Automation
+Yeti IoT
 Yeti
