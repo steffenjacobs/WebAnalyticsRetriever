@@ -36,6 +36,7 @@ HomeSeer
 Homify
 HUEston
 IFTTT
+IKEA Smart Home
 ImperiHome
 ioBroker
 IoTivity
