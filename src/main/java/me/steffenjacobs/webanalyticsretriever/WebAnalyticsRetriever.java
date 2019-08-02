@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +30,7 @@ public class WebAnalyticsRetriever {
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
-	private Collection<SearchResults> getResultCounts(String... terms) {
+	private Collection<SearchResults> getResultCounts(Iterable<String> terms) {
 		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
 			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleService.search(term));
@@ -85,7 +88,11 @@ public class WebAnalyticsRetriever {
 
 		StringBuilder sb = new StringBuilder();
 		String[] split = csv.split("\r\n");
-		Collection<SearchResults> results = getResultCounts(split);
+
+		List<String> terms = Arrays.asList(split);
+		Collections.shuffle(terms);
+
+		Collection<SearchResults> results = getResultCounts(terms);
 		results.forEach(v -> {
 			sb.append(v.getTerm());
 			sb.append(", ");
