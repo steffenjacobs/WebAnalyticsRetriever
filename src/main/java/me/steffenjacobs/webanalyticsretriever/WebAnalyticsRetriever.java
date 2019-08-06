@@ -26,14 +26,14 @@ public class WebAnalyticsRetriever {
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd-HH-mm");
 
-	private GoogleSearchService googleService;
+	private GoogleSearchApiService googleSearchApiService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
 	private Collection<SearchResults> getResultCounts(Iterable<String> terms) {
 		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
-			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleService.search(term));
+			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleSearchApiService.search(term));
 			CompletableFuture<Long> redditResultFuture = CompletableFuture.supplyAsync(() -> redditService.search(term));
 			CompletableFuture<Long> googleBrowserSearchResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserService.search(term));
 			CompletableFuture<Long> googleBrowserSearchExactResultFuture = null;
@@ -43,7 +43,7 @@ public class WebAnalyticsRetriever {
 				googleBrowserSearchExactResultFuture = CompletableFuture.supplyAsync(() -> googleBrowserService.search(term.replace(" ", " AND ")));
 			}
 
-			long googleResult = googleResultFuture.join();
+			long googleSearchApiResult = googleResultFuture.join();
 			long redditResult = redditResultFuture.join();
 			long googleBrowserSearchResult = googleBrowserSearchResultFuture.join();
 			long googleBrowserExactSearchResult = googleBrowserSearchResult;
@@ -52,7 +52,7 @@ public class WebAnalyticsRetriever {
 				googleBrowserExactSearchResult = googleBrowserSearchExactResultFuture.join();
 			}
 
-			result.add(new SearchResults(term, googleResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
+			result.add(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
 		}
 		return result;
 	}
@@ -76,7 +76,7 @@ public class WebAnalyticsRetriever {
 		ResourceBundle rb = loadResource(resourceFile);
 		String apiKey = rb.getString("google-api-key");
 
-		googleService = new GoogleSearchService(apiKey);
+		googleSearchApiService = new GoogleSearchApiService(apiKey);
 
 		if (args.length != 1) {
 			LOG.warn("Invalid input. Please specify input file. Using default file ./terms.txt...");

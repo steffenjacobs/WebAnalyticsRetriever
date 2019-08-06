@@ -20,7 +20,7 @@ import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 public class WebAnalyticsRetrieverAsync {
 	private static final Logger LOG = LoggerFactory.getLogger(WebAnalyticsRetrieverAsync.class);
 
-	private GoogleSearchService googleService;
+	private GoogleSearchApiService googleService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 	private final GoogleSearchSeleniumService googleBrowserSearchService = new GoogleSearchSeleniumService();
 
@@ -61,7 +61,7 @@ public class WebAnalyticsRetrieverAsync {
 		ResourceBundle rb = loadResource(resourceFile);
 		String apiKey = rb.getString("google-api-key");
 
-		googleService = new GoogleSearchService(apiKey);
+		googleService = new GoogleSearchApiService(apiKey);
 
 		if (args.length != 1) {
 			LOG.error("Invalid input. Please specify input file. Using default file ./terms.txt...");

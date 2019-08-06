@@ -12,13 +12,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.steffenjacobs.webanalyticsretriever.domain.google.GoogleCustomSearchTotalResult;
 
 /** @author Steffen Jacobs */
-public class GoogleSearchService {
+public class GoogleSearchApiService {
 
-	private static final Logger LOG = LoggerFactory.getLogger(GoogleSearchService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GoogleSearchApiService.class);
 
 	private final String apiKey;
 
-	public GoogleSearchService(String apiKey) {
+	public GoogleSearchApiService(String apiKey) {
 		this.apiKey = apiKey;
 	}
 
@@ -30,7 +30,7 @@ public class GoogleSearchService {
 					+ "&cx=002845322276752338984:vxqzfa86nqc&q=" + encodedTerm + "&exactTerms=" + encodedTerm + "&alt=json&fields=queries(request(totalResults))"),
 					new TypeReference<GoogleCustomSearchTotalResult>() {
 					});
-			LOG.info("Retrieved Google Search result for '{}'.", term);
+			LOG.info("Retrieved Google Search API result for '{}'.", term);
 			return Long.parseLong(result.getQueries().getRequest().get(0).getTotalResults());
 		} catch (IOException e) {
 			if (e.getMessage().contains("403")) {
