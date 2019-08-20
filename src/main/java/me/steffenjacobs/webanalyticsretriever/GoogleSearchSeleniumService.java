@@ -34,7 +34,7 @@ public class GoogleSearchSeleniumService {
 			Document doc = Jsoup.parse(driver.getPageSource());
 
 			Element elem = doc.getElementById("resultStats");
-
+			
 			Matcher m = PATTERN_NUMBER.matcher(elem.ownText());
 
 			if (m.find()) {
@@ -45,7 +45,7 @@ public class GoogleSearchSeleniumService {
 			}
 			driver.close();
 
-		} catch (UnsupportedEncodingException  | WebDriverException e) {
+		} catch (UnsupportedEncodingException  | WebDriverException | NullPointerException e) {
 			LOG.error(e.getMessage(), e);
 		}
 		finally {

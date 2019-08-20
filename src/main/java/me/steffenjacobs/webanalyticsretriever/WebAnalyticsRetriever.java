@@ -30,6 +30,8 @@ public class WebAnalyticsRetriever {
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
+	private final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
+
 	private Collection<SearchResults> getResultCounts(Iterable<String> terms) {
 		Collection<SearchResults> result = new ArrayList<>();
 		for (String term : terms) {
@@ -89,7 +91,15 @@ public class WebAnalyticsRetriever {
 		StringBuilder sb = new StringBuilder();
 		String[] split = csv.split("\r\n");
 
-		List<String> terms = Arrays.asList(split);
+		List<String> terms = new ArrayList<>();
+		terms.addAll(Arrays.asList(split));
+
+		for (String term : split) {
+			for (String keyWord : KEY_WORDS) {
+				terms.add(term + " " + keyWord);
+			}
+		}
+
 		Collections.shuffle(terms);
 
 		Collection<SearchResults> results = getResultCounts(terms);
