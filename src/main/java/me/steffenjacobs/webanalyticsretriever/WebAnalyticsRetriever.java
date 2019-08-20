@@ -32,8 +32,9 @@ public class WebAnalyticsRetriever {
 
 	public static final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
 
-	private Collection<SearchResults> getResultCounts(Iterable<String> terms) {
+	private Collection<SearchResults> getResultCounts(Collection<String> terms) {
 		Collection<SearchResults> result = new ArrayList<>();
+		int count = 0;
 		for (String term : terms) {
 			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleSearchApiService.search(term));
 			CompletableFuture<Long> redditResultFuture = CompletableFuture.supplyAsync(() -> redditService.search(term));
@@ -55,6 +56,8 @@ public class WebAnalyticsRetriever {
 			}
 
 			result.add(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
+			LOG.info("Retrieved results for search term {} ({}/{})", term, count, terms.size());
+			count++;
 		}
 		return result;
 	}
