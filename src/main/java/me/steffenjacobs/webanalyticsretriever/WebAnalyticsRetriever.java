@@ -30,7 +30,7 @@ public class WebAnalyticsRetriever {
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
 	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
-	private final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
+	public static final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
 
 	private Collection<SearchResults> getResultCounts(Iterable<String> terms) {
 		Collection<SearchResults> result = new ArrayList<>();

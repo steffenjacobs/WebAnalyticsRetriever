@@ -42,8 +42,8 @@ public class AnalyticsAggregator {
 			if (m.find()) {
 				countFiles++;
 				for (String line : Files.readAllLines(file.toPath())) {
-					countEntries++;
 					String[] split = line.split(",");
+					countEntries += split.length;
 
 					long valGoogle = -1;
 					long valReddit = -1;
@@ -72,8 +72,9 @@ public class AnalyticsAggregator {
 		}
 		LOG.info("Imported {} entries from {} files.", countEntries, countFiles);
 
-		final Set<Result> transformedResults = new HashSet<>();
+		final Map<String, Result> transformedResults = new HashMap<>();
 
+		// filter null values (-1) and calculate average for each entry
 		for (Map.Entry<String, Collection<SearchResults>> e : results.entrySet()) {
 			LongStream sGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount);
 			final long countGoogle = sGoogle.count();
@@ -99,16 +100,51 @@ public class AnalyticsAggregator {
 			sGoogleWebSearchExact = filteredStream(e.getValue(), SearchResults::getGoogleBrowserExactSearchResultCount);
 			final long countGoogleWebSearchExact = sGoogleWebSearchExact.count();
 
-			transformedResults.add(new Result(e.getKey().trim(), avgGoogle, avgReddit, avgGoogleWebSearch, avgGoogleWebSearchExact, countGoogle, countReddit, countGoogleWebSearch,
-					countGoogleWebSearchExact));
+			transformedResults.put(e.getKey().trim(), new Result(e.getKey().trim(), avgGoogle, avgReddit, avgGoogleWebSearch, avgGoogleWebSearchExact, countGoogle, countReddit,
+					countGoogleWebSearch, countGoogleWebSearchExact));
 		}
 
-		LOG.info("Aggregated {} values to {} vlaues.", countEntries, transformedResults.size());
+		LOG.info("Aggregated {} entries to {} entries.", countEntries, transformedResults.size());
 
-		exportToFile(transformedResults, false);
-		exportToFile(transformedResults, true);
-		exportToFileWithoutCountRounded(transformedResults);
-		exportToTableFile(transformedResults);
+		// consolidate key words
+		final Set<Result> consolidatedResults = new HashSet<>();
+
+		for (String platformName : Files.readAllLines(new File("./terms.txt").toPath())) {
+
+			Set<Result> keywordBasedResults = new HashSet<>();
+			for (String keyWord : WebAnalyticsRetriever.KEY_WORDS) {
+				keywordBasedResults.add(transformedResults.get(platformName + " " + keyWord));
+			}
+
+			double avgGoogle = 0;
+			double avgGoogleWeb = 0;
+			double avgGoogleWebExact = 0;
+			double avgReddit = 0;
+
+			long cntGoogle = 0;
+			long cntGoogleWeb = 0;
+			long cntGoogleWebExact = 0;
+			long cntReddit = 0;
+
+			for (Result r : keywordBasedResults) {
+				avgGoogle += r.getAverageGoogle();
+				avgGoogleWeb += r.getAverageGoogleWebSearch();
+				avgGoogleWebExact += r.getAverageGoogleWebSearchExact();
+				avgReddit += r.getAverageReddit();
+
+				cntGoogle += r.getCountGoogle();
+				cntGoogleWeb += r.getCountGoogleWebSearch();
+				cntGoogleWebExact += r.getCountGoogleWebSearchExact();
+				cntReddit += r.getCountReddit();
+			}
+			consolidatedResults.add(new Result(platformName, avgGoogle/WebAnalyticsRetriever.KEY_WORDS.length, avgReddit/WebAnalyticsRetriever.KEY_WORDS.length, avgGoogleWeb/WebAnalyticsRetriever.KEY_WORDS.length, avgGoogleWebExact/WebAnalyticsRetriever.KEY_WORDS.length, cntGoogle, cntReddit, cntGoogleWeb, cntGoogleWebExact));
+		}
+		
+		//store results
+		exportToFile(consolidatedResults, false);
+		exportToFile(consolidatedResults, true);
+		exportToFileWithoutCountRounded(consolidatedResults);
+		exportToTableFile(consolidatedResults);
 	}
 
 	private static LongStream filteredStream(Collection<SearchResults> l, Function<SearchResults, Long> mapper) {
@@ -139,7 +175,7 @@ public class AnalyticsAggregator {
 			sb.append("\n");
 		}
 
-		final String filename = "output-" + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final String filename = "output-consolidated-" + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported {} aggregated values to file '{}'.", rounded ? "rounded" : "exact", filename);
 	}
@@ -159,17 +195,20 @@ public class AnalyticsAggregator {
 			sb.append("\n");
 		}
 
-		final String filename = "output-woresultsrounded-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final String filename = "output-woresults-consolidated-rounded-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported table to file '{}'.", filename);
 	}
-	
+
 	private static void exportToTableFile(Set<Result> transformedResults) throws IOException {
 		StringBuilder sb = new StringBuilder();
-		//sb.append("\\begin{tabular}{l|c|c|c|c}\r\n" );
-		//sb.append("\\textbf{Name of the} & \\textbf{\\# Search Results} & \\textbf{\\# Comments on} & \\textbf{\\# Search Results on} & \\textbf{\\# Search Results on exact}\\\\\r\n" + 
-		//		"			\\textbf{IoT Platform} & \\textbf{on Google API} & \\textbf{Reddit} & \\textbf{Google Web Search} & \\textbf{Google Web Search}\\\\\r\n"); 
-		//sb.append("      \\hline\r\n");
+		// sb.append("\\begin{tabular}{l|c|c|c|c}\r\n" );
+		// sb.append("\\textbf{Name of the} & \\textbf{\\# Search Results} &
+		// \\textbf{\\# Comments on} & \\textbf{\\# Search Results on} & \\textbf{\\#
+		// Search Results on exact}\\\\\r\n" +
+		// " \\textbf{IoT Platform} & \\textbf{on Google API} & \\textbf{Reddit} &
+		// \\textbf{Google Web Search} & \\textbf{Google Web Search}\\\\\r\n");
+		// sb.append(" \\hline\r\n");
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(" & ");
@@ -182,7 +221,7 @@ public class AnalyticsAggregator {
 			sb.append(new BigDecimal(Math.round(r.getAverageGoogleWebSearchExact())).toPlainString());
 			sb.append(" \\\\\n");
 		}
-		//sb.append("    \\end{tabular}");
+		// sb.append(" \\end{tabular}");
 
 		final String filename = "output-results-table-" + sdf.format(Calendar.getInstance().getTime()) + ".txt";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
