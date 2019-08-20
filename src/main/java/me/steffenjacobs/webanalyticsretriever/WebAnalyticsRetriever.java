@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -32,8 +33,7 @@ public class WebAnalyticsRetriever {
 
 	public static final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
 
-	private Collection<SearchResults> getResultCounts(Collection<String> terms) {
-		Collection<SearchResults> result = new ArrayList<>();
+	private void getResultCounts(Collection<String> terms, Consumer<SearchResults> consumer) {
 		int count = 0;
 		for (String term : terms) {
 			CompletableFuture<Long> googleResultFuture = CompletableFuture.supplyAsync(() -> googleSearchApiService.search(term));
@@ -55,11 +55,10 @@ public class WebAnalyticsRetriever {
 				googleBrowserExactSearchResult = googleBrowserSearchExactResultFuture.join();
 			}
 
-			result.add(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
+			consumer.accept(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
 			LOG.info("Retrieved results for search term {} ({}/{})", term, count, terms.size());
 			count++;
 		}
-		return result;
 	}
 
 	private ResourceBundle loadResource(String filename) {
@@ -91,7 +90,6 @@ public class WebAnalyticsRetriever {
 
 		String csv = FileUtils.readFileToString(f, StandardCharsets.UTF_8);
 
-		StringBuilder sb = new StringBuilder();
 		String[] split = csv.split("\r\n");
 
 		List<String> terms = new ArrayList<>();
@@ -105,8 +103,11 @@ public class WebAnalyticsRetriever {
 
 		Collections.shuffle(terms);
 
-		Collection<SearchResults> results = getResultCounts(terms);
-		results.forEach(v -> {
+		final String filename = "output-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final File file = new File(filename);
+		LOG.info("Storing result to ./{}...", filename);
+		getResultCounts(terms, v -> {
+			final StringBuilder sb = new StringBuilder();
 			sb.append(v.getTerm());
 			sb.append(", ");
 			sb.append(v.getGoogleSearchResultCount());
@@ -117,11 +118,13 @@ public class WebAnalyticsRetriever {
 			sb.append(", ");
 			sb.append(v.getGoogleBrowserExactSearchResultCount());
 			sb.append("\n");
+			try {
+				FileUtils.write(file, sb.toString(), StandardCharsets.UTF_8, true);
+			} catch (IOException e) {
+				LOG.error(e.getMessage(), e);
+			}
 		});
 
-		final String filename = "output-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
-		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
-		LOG.info("Stored result to ./{}", filename);
 	}
 
 	public static void main(String[] args) throws IOException {
