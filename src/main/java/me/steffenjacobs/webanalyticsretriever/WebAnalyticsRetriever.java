@@ -55,9 +55,9 @@ public class WebAnalyticsRetriever {
 				googleBrowserExactSearchResult = googleBrowserSearchExactResultFuture.join();
 			}
 
-			consumer.accept(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, googleBrowserExactSearchResult));
-			LOG.info("Retrieved results for search term {} ({}/{})", term, count, terms.size());
+			consumer.accept(new SearchResults(term, googleSearchApiResult, redditResult, googleBrowserSearchResult, containsWhitespaces?googleBrowserExactSearchResult:googleBrowserSearchResult));
 			count++;
+			LOG.info("Retrieved results for search term {} ({}/{})", term, count, terms.size());
 		}
 	}
 

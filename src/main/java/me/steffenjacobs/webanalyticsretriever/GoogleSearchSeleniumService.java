@@ -19,14 +19,18 @@ public class GoogleSearchSeleniumService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleSearchSeleniumService.class);
 	private static final Pattern PATTERN_NUMBER = Pattern.compile(".*\\s([\\d|.]*)\\s.*");
+	private ChromeDriver driver;
+
+	public GoogleSearchSeleniumService() {
+		System.setProperty("webdriver.chrome.driver", "C:\\projects\\IoTPlatformIntegrator\\chromedriver.exe");
+		final ChromeOptions options = new ChromeOptions();
+		options.addArguments("--headless");
+		driver = new ChromeDriver(options);
+	}
 
 	public long search(String term) {
 		try {
 			String encodedTerm = URLEncoder.encode(term, "UTF-8");
-			System.setProperty("webdriver.chrome.driver", "C:\\projects\\IoTPlatformIntegrator\\chromedriver.exe");
-			final ChromeOptions options = new ChromeOptions();
-			options.addArguments("--headless");
-			ChromeDriver driver = new ChromeDriver(options);
 
 			String baseUrl = "https://www.google.de/search?q=" + encodedTerm;
 			driver.get(baseUrl);
@@ -34,22 +38,37 @@ public class GoogleSearchSeleniumService {
 			Document doc = Jsoup.parse(driver.getPageSource());
 
 			Element elem = doc.getElementById("resultStats");
-			
+
+			if (elem == null) {
+				LOG.info("Ran into capture with term {}, waiting for 30 seconds and starting up a new chrome driver instance...", term);
+				Thread.sleep(30000);
+				final ChromeOptions options = new ChromeOptions();
+				options.addArguments("--headless");
+				driver = new ChromeDriver(options);
+				driver.get(baseUrl);
+				doc = Jsoup.parse(driver.getPageSource());
+				elem = doc.getElementById("resultStats");
+			}
+
 			Matcher m = PATTERN_NUMBER.matcher(elem.ownText());
 
 			if (m.find()) {
 				BigInteger val = new BigInteger(m.group(1).replace(".", ""));
-				driver.close();
 				LOG.info("Retrieved Google browser search result for '{}'.", term);
 				return val.longValue();
+			} else {
+				LOG.info("Ran into another capture, waiting for 30 seconds...");
+				Thread.sleep(30000);
 			}
-			driver.close();
 
-		} catch (UnsupportedEncodingException  | WebDriverException | NullPointerException e) {
-			LOG.error(e.getMessage(), e);
-		}
-		finally {
+		} catch (UnsupportedEncodingException | WebDriverException | NullPointerException | InterruptedException e) {
+			LOG.error(e.getMessage() + " element {} ", term, e);
+		} finally {
 		}
 		return -1;
+	}
+
+	public void dispose() {
+		driver.close();
 	}
 }
