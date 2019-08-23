@@ -41,7 +41,7 @@ Logitech
 Logitech Harmony
 Loxone Smart Home
 mediola IQONTROL
-Microsoft Home OS
+Microsoft HomeOS
 Mindsphere
 MisterHouse
 Mycontroller
