@@ -47,18 +47,23 @@ public class GoogleSearchSeleniumService {
 				driver = new ChromeDriver(options);
 				driver.get(baseUrl);
 				doc = Jsoup.parse(driver.getPageSource());
+
 				elem = doc.getElementById("resultStats");
 			}
 
-			Matcher m = PATTERN_NUMBER.matcher(elem.ownText());
-
-			if (m.find()) {
-				BigInteger val = new BigInteger(m.group(1).replace(".", ""));
-				LOG.info("Retrieved Google browser search result for '{}'.", term);
-				return val.longValue();
+			Element topstuffDiv = doc.getElementById("topstuff");
+			if (topstuffDiv.childNodeSize() != 0) {
+				return 0;
 			} else {
-				LOG.info("Ran into another capture, waiting for 30 seconds...");
-				Thread.sleep(30000);
+				Matcher m = PATTERN_NUMBER.matcher(elem.ownText());
+				if (m.find()) {
+					BigInteger val = new BigInteger(m.group(1).replace(".", ""));
+					LOG.info("Retrieved Google browser search result for '{}'.", term);
+					return val.longValue();
+				} else {
+					LOG.info("Ran into another capture, waiting for 30 seconds...");
+					Thread.sleep(30000);
+				}
 			}
 
 		} catch (UnsupportedEncodingException | WebDriverException | NullPointerException | InterruptedException e) {
