@@ -111,8 +111,11 @@ public class AnalyticsAggregator {
 		// consolidate key words
 		final Set<Result> consolidatedResults = new HashSet<>();
 
+		final Set<Result> keywordLessResults = new HashSet<>();
 		for (String platformName : Files.readAllLines(new File("./terms.txt").toPath())) {
 
+			keywordLessResults.add(transformedResults.get(platformName));
+			
 			Set<Result> keywordBasedResults = new HashSet<>();
 			for (String keyWord : WebAnalyticsRetriever.KEY_WORDS) {
 				keywordBasedResults.add(transformedResults.get(platformName + " " + keyWord));
@@ -145,8 +148,9 @@ public class AnalyticsAggregator {
 		}
 
 		// store results
-		exportToFile(consolidatedResults, false);
-		exportToFile(consolidatedResults, true);
+		exportToFile(consolidatedResults, false, false);
+		exportToFile(consolidatedResults, true, false);
+		exportToFile(keywordLessResults, true, true);
 		exportToFileWithoutCountRounded(consolidatedResults);
 		exportToTableFile(consolidatedResults);
 
@@ -194,7 +198,7 @@ public class AnalyticsAggregator {
 		return l.stream().mapToLong(v -> mapper.apply(v).longValue()).filter(v -> v != -1);
 	}
 
-	private static void exportToFile(Set<Result> transformedResults, final boolean rounded) throws IOException {
+	private static void exportToFile(Set<Result> transformedResults, final boolean rounded, final boolean original) throws IOException {
 		final StringBuilder sb = new StringBuilder(
 				"name,averageGoogle,averageReddit,averageGoogleSearchBrowser,averageGoogleSearchBrowserExact,countGoogle,countReddit,countGoogleSearchBrowser,countGoogleSearchBrowserExact\n");
 		for (Result r : transformedResults) {
@@ -218,7 +222,7 @@ public class AnalyticsAggregator {
 			sb.append("\n");
 		}
 
-		final String filename = "output-consolidated-" + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final String filename = "output" + (original?"-original-":"-consolidated-") + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported {} aggregated values to file '{}'.", rounded ? "rounded" : "exact", filename);
 	}
