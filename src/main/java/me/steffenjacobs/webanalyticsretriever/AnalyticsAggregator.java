@@ -26,15 +26,24 @@ import org.slf4j.LoggerFactory;
 
 import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
 
-/** @author Steffen Jacobs */
+/**
+ * Main entry point for the aggregation of the csv files created by the
+ * {@link WebAnalyticsRetriever}.
+ * 
+ * @author Steffen Jacobs
+ */
 public class AnalyticsAggregator {
 	private static final Logger LOG = LoggerFactory.getLogger(AnalyticsAggregator.class);
 
 	private static final Pattern FILE_PATTERN = Pattern.compile("output-\\d\\d\\d\\d-\\d\\d-\\d\\d-\\d\\d-\\d\\d.csv");
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd-HH-mm");
 
+	/*** Main entry point */
 	public static void main(String[] args) throws IOException {
 
+		// step one: load all csv files into a Map keyed with the search term (platform
+		// name plus optional markers). Each platform name is associated with all its
+		// search results
 		final Map<String, Collection<SearchResults>> results = new HashMap<>();
 
 		int countEntries = 0;
@@ -52,15 +61,20 @@ public class AnalyticsAggregator {
 					long valGoogleBrowser = -1;
 					long valGoogleBrowserExact = -1;
 					if (split.length == 2) {
+						// compatibility for initial google api-only csv files
 						valGoogle = Long.parseLong(split[1].trim());
 					} else if (split.length == 3) {
+						// compatibility for 2nd gen google api + reddit csv files
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
 					} else if (split.length == 4) {
+						// compatibility for reddit + google api + google web search csv files
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
 						valGoogleBrowser = Long.parseLong(split[3].trim());
 					} else {
+						// current version of csv files with reddit, google api and google web search
+						// (with and without exact terms)
 						valReddit = Long.parseLong(split[1].trim());
 						valGoogle = Long.parseLong(split[2].trim());
 						valGoogleBrowser = Long.parseLong(split[3].trim());
@@ -74,9 +88,10 @@ public class AnalyticsAggregator {
 		}
 		LOG.info("Imported {} entries from {} files.", countEntries, countFiles);
 
+		// filter null values (search results equal to -1) and calculate the average for
+		// each search engine
 		final Map<String, Result> transformedResults = new HashMap<>();
 
-		// filter null values (-1) and calculate average for each entry
 		for (Map.Entry<String, Collection<SearchResults>> e : results.entrySet()) {
 			LongStream sGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount);
 			final long countGoogle = sGoogle.count();
@@ -108,14 +123,18 @@ public class AnalyticsAggregator {
 
 		LOG.info("Aggregated {} entries to {} entries.", countEntries, transformedResults.size());
 
-		// consolidate key words
+		// consolidate key words: The search terms had been extended with "markers",
+		// this will aggregate all the search term related to a platform name and
+		// calculate the average (excluding the non-expanded platform name without a
+		// marker)
 		final Set<Result> consolidatedResults = new HashSet<>();
 
-		final Set<Result> keywordLessResults = new HashSet<>();
+		final Set<Result> keywordResultsWithoutMarker = new HashSet<>();
 		for (String platformName : Files.readAllLines(new File("./terms.txt").toPath())) {
 
-			keywordLessResults.add(transformedResults.get(platformName));
-			
+			// keywords without a marker are stored to the keywordResultsWithoutMarker set
+			keywordResultsWithoutMarker.add(transformedResults.get(platformName));
+
 			Set<Result> keywordBasedResults = new HashSet<>();
 			for (String keyWord : WebAnalyticsRetriever.KEY_WORDS) {
 				keywordBasedResults.add(transformedResults.get(platformName + " " + keyWord));
@@ -147,17 +166,21 @@ public class AnalyticsAggregator {
 					cntGoogleWebExact));
 		}
 
-		// store results
+		// store results to files
 		exportToFile(consolidatedResults, false, false);
 		exportToFile(consolidatedResults, true, false);
-		exportToFile(keywordLessResults, true, true);
+		exportToFile(keywordResultsWithoutMarker, true, true);
 		exportToFileWithoutCountRounded(consolidatedResults);
 		exportToTableFile(consolidatedResults);
 
-		storeStd(results);
+		calculateAndStore(results);
 	}
 
-	private static void storeStd(final Map<String, Collection<SearchResults>> results) throws IOException {
+	/**
+	 * Calculates and stores the standard deviation for each search engine across
+	 * all runs for each platform and stores it to a csv file.
+	 */
+	private static void calculateAndStore(final Map<String, Collection<SearchResults>> results) throws IOException {
 		final StringBuilder sb = new StringBuilder("name,stdGoogle,stdReddit,stdGoogleSearchBrowser,stdGoogleSearchBrowserExact\n");
 		final StandardDeviation sd = new StandardDeviation();
 		for (final Map.Entry<String, Collection<SearchResults>> e : results.entrySet()) {
@@ -194,6 +217,11 @@ public class AnalyticsAggregator {
 		LOG.info("Exported standard deviation values to file '{}'.", filename);
 	}
 
+	/**
+	 * @return a stream based on the applied mapper on the collection of
+	 *         {@link SearchResults} with the null values (search result equal to
+	 *         -1) filtered out.
+	 */
 	private static LongStream filteredStream(Collection<SearchResults> l, Function<SearchResults, Long> mapper) {
 		return l.stream().mapToLong(v -> mapper.apply(v).longValue()).filter(v -> v != -1);
 	}
@@ -222,7 +250,8 @@ public class AnalyticsAggregator {
 			sb.append("\n");
 		}
 
-		final String filename = "output" + (original?"-original-":"-consolidated-") + (rounded ? "rounded" : "exact") + "-aggregated-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		final String filename = "output" + (original ? "-original-" : "-consolidated-") + (rounded ? "rounded" : "exact") + "-aggregated-"
+				+ sdf.format(Calendar.getInstance().getTime()) + ".csv";
 		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
 		LOG.info("Exported {} aggregated values to file '{}'.", rounded ? "rounded" : "exact", filename);
 	}
@@ -247,15 +276,9 @@ public class AnalyticsAggregator {
 		LOG.info("Exported table to file '{}'.", filename);
 	}
 
+	/** Generates a LaTeX table. */
 	private static void exportToTableFile(Set<Result> transformedResults) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		// sb.append("\\begin{tabular}{l|c|c|c|c}\r\n" );
-		// sb.append("\\textbf{Name of the} & \\textbf{\\# Search Results} &
-		// \\textbf{\\# Comments on} & \\textbf{\\# Search Results on} & \\textbf{\\#
-		// Search Results on exact}\\\\\r\n" +
-		// " \\textbf{IoT Platform} & \\textbf{on Google API} & \\textbf{Reddit} &
-		// \\textbf{Google Web Search} & \\textbf{Google Web Search}\\\\\r\n");
-		// sb.append(" \\hline\r\n");
+		final StringBuilder sb = new StringBuilder();
 		for (Result r : transformedResults) {
 			sb.append(r.getName());
 			sb.append(" & ");
@@ -275,6 +298,10 @@ public class AnalyticsAggregator {
 		LOG.info("Exported rounded and aggregated values withour result to file '{}'.", filename);
 	}
 
+	/**
+	 * Result-class that contains the average result counts plus the number of runs
+	 * for each search engine for each platform.
+	 */
 	static class Result {
 		private final String name;
 		private final double averageGoogle;

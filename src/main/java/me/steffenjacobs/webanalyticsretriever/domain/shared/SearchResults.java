@@ -1,6 +1,13 @@
 package me.steffenjacobs.webanalyticsretriever.domain.shared;
 
-/** @author Steffen Jacobs */
+/**
+ * Represents a single run of the
+ * {@link me.steffenjacobs.webanalyticsretriever.WebAnalyticsRetriever}. Can be
+ * identified by the {@link term}. Contains search result counts for Reddit,
+ * Google Search API, the Google WebSearch and the exact Google Web Search.
+ * 
+ * @author Steffen Jacobs
+ */
 public class SearchResults {
 
 	private final String term;
