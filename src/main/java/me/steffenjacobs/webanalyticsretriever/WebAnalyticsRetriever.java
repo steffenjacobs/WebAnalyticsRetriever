@@ -26,6 +26,9 @@ import me.steffenjacobs.webanalyticsretriever.domain.shared.SearchResults;
  * This class contains the main entry point for the web mining application that
  * collects the search results from the Google WebSearch, the Google Search API
  * and the Reddit Search.
+ * 
+ * PLEASE SPECIFY YOUR GOOGLE SEARCH API KEY AND THE PATH TO YOUR CHROMEDRIVER
+ * IN THE settings.properties FILE. If it does not exist yet, please create it.
  */
 public class WebAnalyticsRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(WebAnalyticsRetriever.class);
