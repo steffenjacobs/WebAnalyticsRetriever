@@ -11,7 +11,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import me.steffenjacobs.webanalyticsretriever.domain.google.GoogleCustomSearchTotalResult;
 
-/** @author Steffen Jacobs */
+/**
+ * Simple Wrapper service to call the Google Search API:
+ * <a href="https://developers.google.com/custom-search/v1/overview">
+ * https://developers.google.com/custom-search/v1/overview</a>
+ * 
+ * @author Steffen Jacobs
+ */
 public class GoogleSearchApiService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GoogleSearchApiService.class);
@@ -22,10 +28,14 @@ public class GoogleSearchApiService {
 		this.apiKey = apiKey;
 	}
 
+	/** Search for the given {@link String term} via the Google Search Api */
 	public long search(String term) {
 		final ObjectMapper objectMapper = new ObjectMapper();
 		try {
+			// URL encoding
 			final String encodedTerm = URLEncoder.encode(term, "UTF-8");
+
+			// send GET and automatically unpack it via Jackson
 			GoogleCustomSearchTotalResult result = objectMapper.readValue(new URL("https://www.googleapis.com/customsearch/v1?key=" + apiKey
 					+ "&cx=002845322276752338984:vxqzfa86nqc&q=" + encodedTerm + "&exactTerms=" + encodedTerm + "&alt=json&fields=queries(request(totalResults))"),
 					new TypeReference<GoogleCustomSearchTotalResult>() {

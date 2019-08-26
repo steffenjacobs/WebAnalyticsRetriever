@@ -12,14 +12,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import me.steffenjacobs.webanalyticsretriever.domain.reddit.RedditSearchResult;
 
-/** @author Steffen Jacobs */
+/**
+ * Simple wrapper to call the Reddit Comment API <a href=
+ * "https://api.pushshift.io/reddit/search/comment/">https://api.pushshift.io/reddit/search/comment/</a>.
+ * 
+ * @author Steffen Jacobs
+ */
 public class RedditSearchResultService {
 	private static final Logger LOG = LoggerFactory.getLogger(RedditSearchResultService.class);
 
+	/** Searches for the {@link String term} in the Reddit comments */
 	public long search(String term) {
 		final ObjectMapper objectMapper = new ObjectMapper();
 		try {
+			// URL encode
 			final String encodedTerm = URLEncoder.encode(term, "UTF-8");
+
+			// send GET and automatically unpack it with Jackson
 			RedditSearchResult result = objectMapper.readValue(
 					new URL("https://api.pushshift.io/reddit/search/comment/?q=" + encodedTerm + "&aggs=created_utc&frequency=year&size=0"),
 					new TypeReference<RedditSearchResult>() {
