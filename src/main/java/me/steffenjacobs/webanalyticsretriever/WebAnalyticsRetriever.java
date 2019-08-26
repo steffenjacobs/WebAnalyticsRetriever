@@ -33,8 +33,8 @@ public class WebAnalyticsRetriever {
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd-HH-mm");
 
 	private GoogleSearchApiService googleSearchApiService;
+	private GoogleSearchSeleniumService googleBrowserService;
 	private final RedditSearchResultService redditService = new RedditSearchResultService();
-	private final GoogleSearchSeleniumService googleBrowserService = new GoogleSearchSeleniumService();
 
 	public static final String[] KEY_WORDS = new String[] { "IoT", "Home Automation", "Smart Home" };
 
@@ -54,8 +54,10 @@ public class WebAnalyticsRetriever {
 		}
 		ResourceBundle rb = loadResource(resourceFile);
 		String apiKey = rb.getString("google-api-key");
+		String chromeDriverPath = rb.getString("webdriver.chrome.driver");
 
 		googleSearchApiService = new GoogleSearchApiService(apiKey);
+		googleBrowserService = new GoogleSearchSeleniumService(chromeDriverPath);
 
 		// load the terms.txt file with the platform names in it
 		if (args.length != 1) {

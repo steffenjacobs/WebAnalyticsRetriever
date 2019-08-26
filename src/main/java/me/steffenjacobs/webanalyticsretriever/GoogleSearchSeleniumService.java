@@ -26,8 +26,8 @@ public class GoogleSearchSeleniumService {
 	private ChromeDriver driver;
 
 	/** Starts a {@link ChromeDriver chrome driver} instance */
-	public GoogleSearchSeleniumService() {
-		System.setProperty("webdriver.chrome.driver", "C:\\projects\\IoTPlatformIntegrator\\chromedriver.exe");
+	public GoogleSearchSeleniumService(String chromeDriverPath) {
+		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 		final ChromeOptions options = new ChromeOptions();
 		options.addArguments("--headless");
 		driver = new ChromeDriver(options);
