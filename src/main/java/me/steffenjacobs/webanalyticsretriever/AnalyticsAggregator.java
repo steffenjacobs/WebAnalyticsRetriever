@@ -19,6 +19,8 @@ import java.util.regex.Pattern;
 import java.util.stream.LongStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.apache.commons.math3.util.MathArrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,14 +139,55 @@ public class AnalyticsAggregator {
 				cntGoogleWebExact += r.getCountGoogleWebSearchExact();
 				cntReddit += r.getCountReddit();
 			}
-			consolidatedResults.add(new Result(platformName, avgGoogle/WebAnalyticsRetriever.KEY_WORDS.length, avgReddit/WebAnalyticsRetriever.KEY_WORDS.length, avgGoogleWeb/WebAnalyticsRetriever.KEY_WORDS.length, avgGoogleWebExact/WebAnalyticsRetriever.KEY_WORDS.length, cntGoogle, cntReddit, cntGoogleWeb, cntGoogleWebExact));
+			consolidatedResults.add(new Result(platformName, avgGoogle / WebAnalyticsRetriever.KEY_WORDS.length, avgReddit / WebAnalyticsRetriever.KEY_WORDS.length,
+					avgGoogleWeb / WebAnalyticsRetriever.KEY_WORDS.length, avgGoogleWebExact / WebAnalyticsRetriever.KEY_WORDS.length, cntGoogle, cntReddit, cntGoogleWeb,
+					cntGoogleWebExact));
 		}
-		
-		//store results
+
+		// store results
 		exportToFile(consolidatedResults, false);
 		exportToFile(consolidatedResults, true);
 		exportToFileWithoutCountRounded(consolidatedResults);
 		exportToTableFile(consolidatedResults);
+
+		storeStd(results);
+	}
+
+	private static void storeStd(final Map<String, Collection<SearchResults>> results) throws IOException {
+		final StringBuilder sb = new StringBuilder("name,stdGoogle,stdReddit,stdGoogleSearchBrowser,stdGoogleSearchBrowserExact\n");
+		final StandardDeviation sd = new StandardDeviation();
+		for (final Map.Entry<String, Collection<SearchResults>> e : results.entrySet()) {
+			LongStream sGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount);
+			long sumGoogle = filteredStream(e.getValue(), SearchResults::getGoogleSearchResultCount).sum();
+			final double sdGoogle = sumGoogle > 1 ? sd.evaluate(MathArrays.normalizeArray(sGoogle.mapToDouble(d -> d).toArray(), 1)) : 0;
+
+			LongStream sReddit = filteredStream(e.getValue(), SearchResults::getRedditSearchResultCount);
+			long sumReddit = filteredStream(e.getValue(), SearchResults::getRedditSearchResultCount).sum();
+			final double sdReddit = sumReddit > 1 ? sd.evaluate(MathArrays.normalizeArray(sReddit.mapToDouble(d -> d).toArray(), 1)) : 0;
+
+			LongStream sGWS = filteredStream(e.getValue(), SearchResults::getGoogleBrowserSearchResultCount);
+			long sumGWS = filteredStream(e.getValue(), SearchResults::getGoogleBrowserSearchResultCount).sum();
+			final double sdGWS = sumGWS > 1 ? sd.evaluate(MathArrays.normalizeArray(sGWS.mapToDouble(d -> d).toArray(), 1)) : 0;
+
+			LongStream sGWSE = filteredStream(e.getValue(), SearchResults::getGoogleBrowserExactSearchResultCount);
+			long sumGWSE = filteredStream(e.getValue(), SearchResults::getGoogleBrowserExactSearchResultCount).sum();
+			final double sdGWSE = sumGWSE > 1 ? sd.evaluate(MathArrays.normalizeArray(sGWSE.mapToDouble(d -> d).toArray(), 1)) : 0;
+
+			sb.append(e.getKey());
+			sb.append(",");
+			sb.append(sdGoogle);
+			sb.append(",");
+			sb.append(sdReddit);
+			sb.append(",");
+			sb.append(sdGWS);
+			sb.append(",");
+			sb.append(sdGWSE);
+			sb.append("\n");
+		}
+
+		final String filename = "output-std-" + sdf.format(Calendar.getInstance().getTime()) + ".csv";
+		FileUtils.write(new File(filename), sb.toString(), StandardCharsets.UTF_8);
+		LOG.info("Exported standard deviation values to file '{}'.", filename);
 	}
 
 	private static LongStream filteredStream(Collection<SearchResults> l, Function<SearchResults, Long> mapper) {
